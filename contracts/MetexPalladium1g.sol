@@ -146,12 +146,12 @@ contract MetexPalladium1g is SafeMath, IERC20 {
         symbol = _symbol;
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin);
-        _;
-    }
+    // modifier onlyAdmin() {
+    //     require(msg.sender == admin);
+    //     _;
+    // }
 
-    function mint(uint256 _amount) public onlyAdmin returns (bool) {
+    function mint(uint256 _amount) public returns (bool) {
         require(_amount >= 0);
         totalSupply += _amount;
         balanceOf[msg.sender] += _amount;

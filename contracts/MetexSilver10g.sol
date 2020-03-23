@@ -1,13 +1,7 @@
-/**
- *Submitted for verification at Etherscan.io on 2020-03-03
-*/
-
 pragma solidity ^0.5.12;
-
 /**
  * Open Zeppelin ERC20 implementation. https://github.com/OpenZeppelin/openzeppelin-solidity/tree/master/contracts/token/ERC20
  */
-
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include
  * the optional functions; to access them see `ERC20Detailed`.
@@ -17,12 +11,10 @@ interface IERC20 {
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() external view returns (uint256);
-
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) external view returns (uint256);
-
     /**
      * @dev Moves `amount` tokens from the caller's account to `recipient`.
      *
@@ -33,7 +25,6 @@ interface IERC20 {
     function transfer(address recipient, uint256 amount)
         external
         returns (bool);
-
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
      * allowed to spend on behalf of `owner` through `transferFrom`. This is
@@ -45,7 +36,6 @@ interface IERC20 {
         external
         view
         returns (uint256);
-
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
      *
@@ -61,7 +51,6 @@ interface IERC20 {
      * Emits an `Approval` event.
      */
     function approve(address spender, uint256 amount) external returns (bool);
-
     /**
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
      * allowance mechanism. `amount` is then deducted from the caller's
@@ -74,7 +63,6 @@ interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount)
         external
         returns (bool);
-
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
@@ -82,7 +70,6 @@ interface IERC20 {
      * Note that `value` may be zero.
      */
     event Transfer(address indexed from, address indexed to, uint256 value);
-
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to `approve`. `value` is the new allowance.
@@ -93,11 +80,9 @@ interface IERC20 {
         uint256 value
     );
 }
-
 /**
  * @dev developed by Sujit Mahavarkar 
  */
-
 contract SafeMath {
     function safeAdd(uint256 a, uint256 b) internal pure returns (uint256 c) {
         c = a + b;
@@ -116,18 +101,15 @@ contract SafeMath {
         c = a / b;
     }
 }
-
 contract MetexSilver10g is SafeMath, IERC20 {
     string public name;
     uint8 public decimals;
     uint256 public totalSupply;
     address public admin;
     string public symbol;
-
+    mapping(address => bool) public tokenUnlocked;
     mapping(address => uint256) public balanceOf;
-
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
     event Burn(address indexed burner, uint256 value);
     event Approval(
         address indexed _owner,
@@ -135,7 +117,6 @@ contract MetexSilver10g is SafeMath, IERC20 {
         uint256 _value
     );
     mapping(address => mapping(address => uint256)) public allowance;
-
     constructor(string memory _name, string memory _symbol, address _admin)
         public
     {
@@ -145,26 +126,27 @@ contract MetexSilver10g is SafeMath, IERC20 {
         totalSupply = 0;
         symbol = _symbol;
     }
-
     modifier onlyAdmin() {
         require(msg.sender == admin);
         _;
     }
-
-    function mint(uint256 _amount) public onlyAdmin returns (bool) {
+    function mint(uint256 _amount) public returns (bool) {
         require(_amount >= 0);
         totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
+        tokenUnlocked[msg.sender] = false;
         emit Transfer(address(0), msg.sender, _amount);
         return true;
     }
-
+    function unlockToken() public {
+        require(balanceOf[msg.sender] > 0);
+        tokenUnlocked[msg.sender] = true;
+    }
     function redeem(uint256 _amount) public returns (bool) {
         require(_amount >= 0);
         _burn(msg.sender, _amount);
         return true;
     }
-
     function _burn(address _who, uint256 _value) internal {
         require(_value <= balanceOf[_who]);
         balanceOf[_who] = safeSub(balanceOf[_who], _value);
@@ -172,19 +154,18 @@ contract MetexSilver10g is SafeMath, IERC20 {
         emit Transfer(_who, address(0), _value);
         emit Burn(_who, _value);
     }
-
     function transfer(address to, uint256 tokens)
         public
         returns (bool success)
     {
         require(totalSupply > 0);
         require(tokens > 0);
+        require(tokenUnlocked[msg.sender] = true, 'You have not unlock your token');
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], tokens);
         balanceOf[to] = safeAdd(balanceOf[to], tokens);
         emit Transfer(msg.sender, to, tokens);
         return true;
     }
-
     function transferFrom(address from, address to, uint256 tokens)
         public
         returns (bool success)
@@ -198,12 +179,12 @@ contract MetexSilver10g is SafeMath, IERC20 {
         emit Transfer(from, to, tokens);
         return true;
     }
-
     function approve(address spender, uint256 tokens)
         public
         returns (bool success)
     {
         allowance[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
+        return true;
     }
 }
